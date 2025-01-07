@@ -1,0 +1,44 @@
+name: Daily new version check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  self-update:
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-tags: true
+          fetch-depth: 0
+
+      - name: Install prerequisites - git-filter-repo
+        run: |
+            sudo apt-get update -y
+            sudo apt-get install -y git-filter-repo
+
+      - name: Update repository
+        run: |
+          git config --global user.email "aleksander.baranowski@yahoo.pl"
+          git config --global user.name "Alex Baranowski"
+          echo "Import lastest from main on master branch $(date)" > /tmp/commit-message
+          git clone https://gitlab.alpinelinux.org/alpine/aports.git
+          cd aports
+          git filter-repo --subdirectory-filter main/alpine-baselayout
+          cd .. # getting back to main repository
+          mv aports .. # move it as different repository
+          git remote add aports ../aports
+          git fetch aports
+          git merge --allow-unrelated-histories --no-commit aports/master
+          git remote remove aports
+          git commit -m "Import lastest from main on master branch $(date)"
+          git push --force origin
