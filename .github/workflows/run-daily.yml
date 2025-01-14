@@ -40,5 +40,5 @@ jobs:
           git fetch aports
           git merge --allow-unrelated-histories --no-commit aports/master
           git remote remove aports
-          git commit -m "Import lastest from main on master branch $(date)"$ || exit 0
+          git commit -m "Import lastest from main on master branch $(date)" || exit 0
           git push --force origin
